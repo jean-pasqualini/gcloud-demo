@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: run-melody
+  labels:
+    name: run-melody
+spec:
+  ports:
+    - port: 80
+  selector:
+    name: run-melody
+  type: LoadBalancer

@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+#
+
+#set -o errexit
+#set -o pipefail
+#set -o nounset
+
+export CLUSTER_ZONE=europe-west1-b
+export PROJECT=$(gcloud config get-value project 2>/dev/null)
+
+function gcloud:image:push()
+{
+	docker tag $1 gcr.io/${PROJECT}/${PROJECT}:latest
+	gcloud docker -- push gcr.io/${PROJECT}/${PROJECT}:latest
+}
+
+function gcloud:project:set()
+{
+	gcloud config set project $1
+}
+
+function gcloud:container:cluster:list()
+{
+	gcloud container clusters list 2>/dev/null
+}
+
+function gcloud:container:cluster:create()
+{
+	gcloud container clusters create ${PROJECT} \
+	--zone "${CLUSTER_ZONE}" \
+	--machine-type "f1-micro" \
+	--image-type "COS" \
+	--disk-size "100" \
+	--scopes "https://www.googleapis.com/auth/compute","https://www.googleapis.com/auth/devstorage.read_only","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring.write","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" \
+	--num-nodes "3" \
+	--network "default" \
+	--enable-cloud-logging \
+	--no-enable-cloud-monitoring
+}
+
+function gcloud:container:cluster:destroy()
+{
+	gcloud container clusters delete ${PROJECT} \
+    --zone "${CLUSTER_ZONE}"
+}
+
+function gcloud:container:cluster:configure()
+{
+	gcloud container clusters get-credentials ${PROJECT} \
+	--zone "${CLUSTER_ZONE}"
+}
+
+function gcloud:container:pod:list()
+{
+	kubectl get pods 2>/dev/null
+}
+
+function gcloud:container:replicat-controller:list()
+{
+	kubectl get rc
+}
+
+function gcloud:container:service:list()
+{
+	kubectl get service
+}
+
+function gcloud:ip()
+{
+	kubectl get service $1
+}
+
+function gcloud:container:start()
+{
+	while kubectl get pods  2>/dev/null | grep 'Terminating'; do
+ 		echo -e "\nsome pods are still running, waiting...\n"
+     	sleep 3
+   	done;
+
+   	kubectl create -f "gke/${PROJECT}-service.yaml"
+   	kubectl create -f "gke/${PROJECT}.yaml"
+}
+
+function gcloud:container:stop()
+{
+   	kubectl delete -f "gke/${PROJECT}-service.yaml"
+   	kubectl delete -f "gke/${PROJECT}.yaml"
+}
+
+function gcloud:container:dashboard()
+{
+	kubectl proxy &
+	open http://localhost:8001/ui/
+}
