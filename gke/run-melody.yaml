@@ -3,7 +3,7 @@ kind: ReplicationController
 metadata:
   name: run-melody
 spec:
-  replicas: 1
+  replicas: 10
   selector:
     name: run-melody
   template:
