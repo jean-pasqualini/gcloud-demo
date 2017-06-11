@@ -20,6 +20,14 @@ image-run: ## Run image
 image-stop: ## Stop imate
 	docker stop php-melody
 
+deploy-on-minikube: image-build ## deploy on minikube
+	@source ./gcloud && \
+	gcloud:project:set run-melody && \
+	kubectl start && \
+	gcloud:image:push run-melody:latest && \
+	gcloud:container:start && \
+	minikube service run-melody
+	
 deploy-on-gcloud: image-build ## deploy on gcloud
 	@source ./gcloud && \
 	gcloud:project:set run-melody && \
